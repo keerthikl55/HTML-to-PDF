@@ -2,16 +2,17 @@ from fastapi import FastAPI, Form
 from fastapi.responses import StreamingResponse, JSONResponse
 from weasyprint import HTML
 import io
-import re
+import os
 
 app = FastAPI()
 
-def replace_emojis_with_images(html: str) -> str:
+def replace_emojis_with_local_images(html: str) -> str:
+    base_path = os.path.abspath("emoji")
     emoji_map = {
-        "✅": '<img src="https://twemoji.maxcdn.com/v/latest/72x72/2705.png" width="18" style="vertical-align: middle;"/>',
-        "❌": '<img src="https://twemoji.maxcdn.com/v/latest/72x72/274c.png" width="18" style="vertical-align: middle;"/>',
-        "📋": '<img src="https://twemoji.maxcdn.com/v/latest/72x72/1f4cb.png" width="20" style="vertical-align: middle;"/>',
-        "ℹ️": '<img src="https://twemoji.maxcdn.com/v/latest/72x72/2139.png" width="18" style="vertical-align: middle;"/>',
+        "✅": f'<img src="file://{base_path}/check.png" width="18" style="vertical-align: middle;">',
+        "❌": f'<img src="file://{base_path}/cross.png" width="18" style="vertical-align: middle;">',
+        "📋": f'<img src="file://{base_path}/report.png" width="20" style="vertical-align: middle;">',
+        "ℹ️": f'<img src="file://{base_path}/info.png" width="18" style="vertical-align: middle;">',
     }
     for emoji, img_tag in emoji_map.items():
         html = html.replace(emoji, img_tag)
@@ -20,7 +21,7 @@ def replace_emojis_with_images(html: str) -> str:
 @app.post("/convert-html-to-pdf/")
 async def convert_html_to_pdf(html: str = Form(...)):
     try:
-        modified_html = replace_emojis_with_images(html)
+        modified_html = replace_emojis_with_local_images(html)
 
         pdf_io = io.BytesIO()
         HTML(string=modified_html).write_pdf(pdf_io)

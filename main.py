@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Form
 from fastapi.responses import StreamingResponse, JSONResponse
-from weasyprint import HTML
+from weasyprint import HTML, CSS
 import io
+import os
 
 app = FastAPI()
 
@@ -9,7 +10,19 @@ app = FastAPI()
 async def convert_html_to_pdf(html: str = Form(...)):
     try:
         pdf_io = io.BytesIO()
-        HTML(string=html).write_pdf(pdf_io)
+
+        # Load the emoji-compatible font CSS
+        css = CSS(string=f"""
+            @font-face {{
+                font-family: 'Noto Color Emoji';
+                src: url('file://{os.path.abspath("NotoColorEmoji.ttf")}');
+            }}
+            body {{
+                font-family: 'Arial', 'Noto Color Emoji', sans-serif;
+            }}
+        """)
+
+        HTML(string=html).write_pdf(pdf_io, stylesheets=[css])
         pdf_io.seek(0)
 
         return StreamingResponse(

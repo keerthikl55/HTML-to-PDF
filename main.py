@@ -1,28 +1,29 @@
 from fastapi import FastAPI, Form
 from fastapi.responses import StreamingResponse, JSONResponse
-from weasyprint import HTML, CSS
+from weasyprint import HTML
 import io
-import os
+import re
 
 app = FastAPI()
+
+def replace_emojis_with_images(html: str) -> str:
+    emoji_map = {
+        "✅": '<img src="https://twemoji.maxcdn.com/v/latest/72x72/2705.png" width="18" style="vertical-align: middle;"/>',
+        "❌": '<img src="https://twemoji.maxcdn.com/v/latest/72x72/274c.png" width="18" style="vertical-align: middle;"/>',
+        "📋": '<img src="https://twemoji.maxcdn.com/v/latest/72x72/1f4cb.png" width="20" style="vertical-align: middle;"/>',
+        "ℹ️": '<img src="https://twemoji.maxcdn.com/v/latest/72x72/2139.png" width="18" style="vertical-align: middle;"/>',
+    }
+    for emoji, img_tag in emoji_map.items():
+        html = html.replace(emoji, img_tag)
+    return html
 
 @app.post("/convert-html-to-pdf/")
 async def convert_html_to_pdf(html: str = Form(...)):
     try:
+        modified_html = replace_emojis_with_images(html)
+
         pdf_io = io.BytesIO()
-
-        # Load the emoji-compatible font CSS
-        css = CSS(string=f"""
-            @font-face {{
-                font-family: 'Noto Color Emoji';
-                src: url('file://{os.path.abspath("NotoColorEmoji.ttf")}');
-            }}
-            body {{
-                font-family: 'Arial', 'Noto Color Emoji', sans-serif;
-            }}
-        """)
-
-        HTML(string=html).write_pdf(pdf_io, stylesheets=[css])
+        HTML(string=modified_html).write_pdf(pdf_io)
         pdf_io.seek(0)
 
         return StreamingResponse(

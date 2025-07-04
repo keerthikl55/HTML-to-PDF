@@ -12,14 +12,35 @@ app = FastAPI()
 def replace_emojis_with_local_images(html: str) -> str:
     base_path = os.path.abspath("emoji")
     emoji_map = {
-        "✅": f'<img src="file://{base_path}/check.png" width="20" height="20">',
-        "❌": f'<img src="file://{base_path}/cross.png" width="20" height="20">',
-        "📋": f'<img src="file://{base_path}/report.png" width="24" height="24">',
-        "ℹ️": f'<img src="file://{base_path}/info.png" width="20" height="20">',
+        "✅": f'<img src="file://{base_path}/check.png" class="emoji emoji-check">',
+        "❌": f'<img src="file://{base_path}/cross.png" class="emoji emoji-cross">',
+        "📋": f'<img src="file://{base_path}/report.png" class="emoji emoji-report">',
+        "ℹ️": f'<img src="file://{base_path}/info.png" class="emoji emoji-info">',
     }
     for emoji, img_tag in emoji_map.items():
         html = html.replace(emoji, img_tag)
     return html
+
+def inject_css(html: str) -> str:
+    css = """
+    <style>
+      img.emoji {
+        vertical-align: middle;
+        display: inline-block;
+      }
+      .emoji-check,
+      .emoji-cross,
+      .emoji-info {
+        width: 16px;
+        height: 16px;
+      }
+      .emoji-report {
+        width: 24px;
+        height: 24px;
+      }
+    </style>
+    """
+    return html.replace("</head>", f"{css}\n</head>")
 
 
 @app.post("/convert-html-to-pdf/")

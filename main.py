@@ -20,7 +20,8 @@ def replace_emojis_with_local_images(html: str) -> str:
     for emoji, img_tag in emoji_map.items():
         html = html.replace(emoji, img_tag)
     return html
-
+    
+'''
 def inject_css(html: str) -> str:
     css = """
     <style>
@@ -40,7 +41,7 @@ def inject_css(html: str) -> str:
       }
     </style>
     """
-    return html.replace("</head>", f"{css}\n</head>")
+    return html.replace("</head>", f"{css}\n</head>")'''
 
 
 @app.post("/convert-html-to-pdf/")
